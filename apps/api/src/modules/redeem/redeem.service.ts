@@ -163,12 +163,31 @@ export class RedeemService {
     return { ok: true };
   }
 
+  /**
+   * 作废批次：先把未使用卡密置为 void。
+   * 若该批次**没有任何已兑换记录**，连卡密带批次一起真删 —— 后台点「作废」后列表里就消失。
+   * 有兑换记录的批次只作废剩余卡密并保留：卡密是发码凭据（卡密 → 授权码），删掉就对不上账了。
+   */
   async voidBatch(batchId: string) {
-    const rows = await this.db.update(redeemCodes)
+    const [batch] = await this.db.select({ id: redeemBatches.id }).from(redeemBatches)
+      .where(eq(redeemBatches.id, batchId)).limit(1);
+    if (!batch) throw AppError.notFound('批次不存在');
+
+    const voided = await this.db.update(redeemCodes)
       .set({ status: 'void' })
       .where(and(eq(redeemCodes.batchId, batchId), eq(redeemCodes.status, 'unused')))
       .returning({ id: redeemCodes.id });
-    return { ok: true, voided: rows.length };
+
+    // 以卡密实际状态为准（batch.used_count 只是缓存列）
+    const [usedRow] = await this.db.select({ value: count() }).from(redeemCodes)
+      .where(and(eq(redeemCodes.batchId, batchId), eq(redeemCodes.status, 'used')));
+    const usedCount = Number(usedRow?.value ?? 0);
+    if (usedCount > 0) return { ok: true, voided: voided.length, deleted: false, usedCount };
+
+    // 无兑换记录：先删卡密再删批次（schema 里 batch_id 也是 on delete cascade，这里显式删更直观）
+    await this.db.delete(redeemCodes).where(eq(redeemCodes.batchId, batchId));
+    await this.db.delete(redeemBatches).where(eq(redeemBatches.id, batchId));
+    return { ok: true, voided: voided.length, deleted: true, usedCount: 0 };
   }
 
   /* ------------------------------------------------ 兑换（用户侧） */

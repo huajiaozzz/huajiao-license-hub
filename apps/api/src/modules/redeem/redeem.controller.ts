@@ -62,7 +62,7 @@ export class RedeemController {
   @Delete('batches/:id')
   @Roles('admin')
   @Audit({ action: 'redeem.batch_void', targetType: 'redeem_batch' })
-  @ApiOperation({ summary: '作废批次内所有未使用卡密' })
+  @ApiOperation({ summary: '作废批次内未使用卡密（无兑换记录的批次连同卡密一起删除）' })
   voidBatch(@Param() params: IdParamDto) {
     return this.redeem.voidBatch(params.id);
   }

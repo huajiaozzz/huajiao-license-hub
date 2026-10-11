@@ -139,10 +139,25 @@ export function RedeemPage() {
             variant="destructive"
             className="bg-destructive text-white"
             onClick={async () => {
-              if (!window.confirm('作废批次「' + row.name + '」中所有未使用的卡密？已兑换的不受影响。')) return;
+              if (!window.confirm(
+                '作废批次「' + row.name + '」中所有未使用的卡密？\n\n'
+                + '· 从未被兑换过的批次：直接删除，列表里不再显示\n'
+                + '· 已有兑换记录的批次：只作废剩余卡密，保留记录便于对账',
+              )) return;
               try {
-                const res = await api.delete<{ voided: number }>('/api/admin/redeem/batches/' + row.id);
-                toast.success('已作废 ' + res.voided + ' 张未使用卡密');
+                const res = await api.delete<{ voided: number; deleted: boolean; usedCount: number }>(
+                  '/api/admin/redeem/batches/' + row.id,
+                );
+                if (res.deleted) {
+                  toast.success('已删除批次「' + row.name + '」', {
+                    description: '同时作废 ' + res.voided + ' 张未使用卡密',
+                  });
+                  if (selectedBatch === row.id) setSelectedBatch(null);
+                } else {
+                  toast.success('已作废 ' + res.voided + ' 张未使用卡密', {
+                    description: '该批次有 ' + res.usedCount + ' 张已兑换，保留记录便于对账',
+                  });
+                }
                 refresh();
               } catch (error) {
                 toast.error('作废失败', { description: error instanceof Error ? error.message : '' });

@@ -65,7 +65,7 @@ license-hub/
 ## 当前状态（核心里程碑已完成并验证）
 
 ~~~text
-✅ 135 项测试全绿（单元 + e2e，17 套件；真实 HTTP 请求 + 真实 Postgres 语义的 PGlite）
+✅ 136 项测试全绿（单元 + e2e，17 套件；真实 HTTP 请求 + 真实 Postgres 语义的 PGlite）
 ✅ API / Web / 共享包 类型检查 0 错误，生产构建通过
 ✅ 实测链路：上架产品 → 配策略 → 发码（单个/批量/CSV）→ 客户端激活 → 本地 Ed25519 验签 → 心跳 → 解绑 → 吊销
 ✅ 管理端页面：概览、产品与策略、授权管理、客户、订单、卡密、域名、设备、Webhook、审计、设置、团队（实测 0 console 错误）
@@ -114,7 +114,7 @@ if (res.ok) {
 
 ~~~bash
 pnpm typecheck                                   # 全仓类型检查
-pnpm --filter @license-hub/api test:all          # 单元 + e2e：135 项
+pnpm --filter @license-hub/api test:all          # 单元 + e2e：136 项
 node scripts/acceptance.mjs                      # 端到端验收：全新数据库跑通全部业务流程（52 项）
 node scripts/check-docker-config.mjs             # Dockerfile / compose 静态一致性
 node scripts/check-runtime-bundle.mjs            # 复现镜像文件布局，验证迁移与启动可用

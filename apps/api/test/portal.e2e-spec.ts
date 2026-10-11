@@ -261,6 +261,56 @@ describe('客户门户 / 订单 / 卡密（e2e）', () => {
     assert.ok((exportCsv.text as string).includes('code,status'));
   });
 
+  it('卡密批次作废：未兑换过的批次直接删除，有兑换记录的只作废剩余并保留', async () => {
+    const listBatchIds = async (): Promise<string[]> => {
+      const res = await request(server).get('/api/admin/redeem/batches?pageSize=200').set(admin());
+      return (res.body.items as { id: string }[]).map((item) => item.id);
+    };
+
+    // A) 从未兑换过：作废即删除（卡密随批次一并消失）
+    const fresh = await request(server).post('/api/admin/redeem/batches').set(admin())
+      .send({ name: '待删除批次', productId, planId, quantity: 2 });
+    assert.equal(fresh.status, 201);
+    const freshId = fresh.body.batch.id as string;
+    assert.equal(await listBatchIds().then((ids) => ids.includes(freshId)), true);
+
+    const removed = await request(server).delete('/api/admin/redeem/batches/' + freshId).set(admin());
+    assert.equal(removed.status, 200, JSON.stringify(removed.body));
+    assert.equal(removed.body.deleted, true, '无兑换记录的批次应被删除');
+    assert.equal(removed.body.voided, 2);
+    assert.equal((await listBatchIds()).includes(freshId), false, '删除后不应再出现在批次列表');
+    const orphan = await request(server).get('/api/admin/redeem/codes?batchId=' + freshId).set(admin());
+    assert.equal(orphan.body.total, 0, '批次删除后其卡密应一并删除');
+
+    // 重复作废：批次已不存在 → 404
+    const again = await request(server).delete('/api/admin/redeem/batches/' + freshId).set(admin());
+    assert.equal(again.status, 404);
+
+    // B) 已有兑换记录：只作废剩余卡密，批次与已兑换卡密保留
+    const mixed = await request(server).post('/api/admin/redeem/batches').set(admin())
+      .send({ name: '保留批次', productId, planId, quantity: 2 });
+    const mixedId = mixed.body.batch.id as string;
+    const redeemed = await request(server).post('/api/portal/redeem').set(portal())
+      .send({ code: mixed.body.codes[0] });
+    assert.equal(redeemed.status, 201, JSON.stringify(redeemed.body));
+
+    const kept = await request(server).delete('/api/admin/redeem/batches/' + mixedId).set(admin());
+    assert.equal(kept.status, 200);
+    assert.equal(kept.body.deleted, false, '有兑换记录的批次不得删除');
+    assert.equal(kept.body.voided, 1);
+    assert.equal(kept.body.usedCount, 1);
+    assert.equal((await listBatchIds()).includes(mixedId), true, '有兑换记录的批次必须保留');
+
+    const codesLeft = await request(server).get('/api/admin/redeem/codes?batchId=' + mixedId).set(admin());
+    const statuses = (codesLeft.body.items as { status: string }[]).map((item) => item.status).sort();
+    assert.deepEqual(statuses, ['used', 'void'], '保留 1 张已兑换 + 1 张已作废');
+
+    // 已作废的剩余卡密不能再兑换
+    const tryVoid = await request(server).post('/api/portal/redeem').set(portal())
+      .send({ code: mixed.body.codes[1] });
+    assert.equal(tryVoid.status, 410);
+  });
+
   it('门户自助解绑设备：解绑成功并扣减配额', async () => {
     const mine = await request(server).get('/api/portal/licenses').set(portal());
     const target = (mine.body.items as { id: string; activationCount: number }[])[0];

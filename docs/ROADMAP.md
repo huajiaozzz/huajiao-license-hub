@@ -82,7 +82,7 @@
 - [x] 真实服务器 Docker Compose 构建部署验证（含宝塔反代 + HTTPS 全链路）
 - [x] 客户端 SDK 与可运行演示 §sdk/§
 - [x] 浏览器冒烟脚本（管理端 / 门户）
-- **验收标准**：§node scripts/acceptance.mjs§ 全绿；§test:all§ 135 项全绿
+- **验收标准**：§node scripts/acceptance.mjs§ 全绿；§test:all§ 136 项全绿
 
 ## M8 · 前端页面 ✅
 - [x] 登录页（含双因素步骤）、控制台外壳、路由守卫、401 自动刷新

@@ -169,6 +169,9 @@ redeem_codes: unused ──redeem──▶ used
 devices:   注册 ──▶ active ──解绑──▶ deactivated ； ──拉黑──▶ blacklisted
 ~~~
 
+**卡密批次**：无兑换记录的批次被「作废」时，批次与其卡密一起被删除（`redeem_codes.batch_id`
+随 `redeem_batches` 级联）；有兑换记录的批次只作废剩余卡密并保留 —— 卡密是「卡密 → 授权码」的发码凭据，删掉无法对账。
+
 ## 7. 索引与约束要点
 - `licenses.key_lookup` 唯一 —— 授权码查重、防重复发放
 - `authorized_domains.domain` 全局唯一 —— 同一域名不能被两张域名授权同时占用
