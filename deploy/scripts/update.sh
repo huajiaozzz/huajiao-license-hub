@@ -18,7 +18,7 @@ if ! command -v git >/dev/null 2>&1 || [ ! -d .git ]; then
   两个办法：
   1) 装 git 后重新克隆一份，把 deploy/.env 拷过去：
        apt-get update && apt-get install -y git        # Debian/Ubuntu
-       git clone https://github.com/qw1295353129/huajiao-license-hub.git license-hub
+       git clone https://github.com/huajiaozzz/huajiao-license-hub.git license-hub
   2) 从本机推送代码（本机执行）：
        rsync -av --exclude node_modules --exclude .data --exclude deploy/.env \
          /Users/l21/Documents/license-hub/ 用户@服务器:/服务器上的/license-hub/
