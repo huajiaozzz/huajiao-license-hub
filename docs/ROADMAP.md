@@ -5,7 +5,7 @@
 ## M1 · 骨架与基础设施 ✅
 - [x] pnpm workspace：`apps/api`、`apps/web`、`packages/shared`
 - [x] NestJS 12（Fastify）启动、全局校验/异常/日志、`GET /api/health`、`/docs`（OpenAPI）
-- [x] Drizzle schema（28 张表）+ 迁移；**双驱动**：生产 PostgreSQL / 本地与测试 PGlite（WASM）
+- [x] Drizzle schema（31 张表）+ 迁移；**双驱动**：生产 PostgreSQL / 本地与测试 PGlite（WASM）
 - [x] 依赖注入阶段自动迁移（`AUTO_MIGRATE`），容器无需额外步骤
 - [x] React 19 + Vite 8 + Tailwind v4 外壳、路由、请求层（自动刷新令牌）；UI 先 HeroUI v3，后整体迁移为 shadcn/ui + Animate UI（见 M9）
 - [x] Docker：多阶段 Dockerfile（非 root + tini + healthcheck）、docker-compose（postgres/redis/migrate/api/web）、nginx 反代、备份恢复脚本
@@ -51,7 +51,7 @@
 - [x] 优惠券：百分比 / 固定金额、限次、限时、限策略
 - [x] 客户管理：列表统计（授权数/订单数/累计消费）、详情、封禁、重置密码
 - [x] 站点设置：开关自助注册、默认货币、试用天数、自助解绑次数
-- **证据**：portal e2e 14 项全绿（含回调重放去重、卡密并发抢占、越权 404、令牌一次性）；
+- **证据**：portal e2e 15 项全绿（含回调重放去重、卡密并发抢占、越权 404、令牌一次性）；
   实测真实链路：注册 → 建单支付 → 自动发码 2 条 → 门户可见 → 生成 5 张卡密；门户 4 页 + 管理端 6 页 0 console 错误
 
 ## M5.5 · 域名授权 ✅
@@ -62,7 +62,7 @@
 - [x] 管理端：域名列表、强制解绑、清空；门户：域名可见 + 自助解绑
 - [x] SDK 域名方法 + 服务端取域名工具 §currentDomainFromHeaders§
 - [x] 修复：到期提醒按**站点时区**比较日期（原先用数据库会话时区，跨零点会算错一天）
-- **证据**：domain e2e 12 项全绿；验收脚本含域名断言（激活/子域覆盖/未授权拒绝/额度），总 52/52
+- **证据**：domain e2e 15 项全绿；验收脚本含域名断言（激活/子域覆盖/未授权拒绝/额度），总 52/52
 
 ## M6 · 运营与集成 ✅
 - [x] 看板聚合接口（KPI + 30 天趋势 + 最近操作 + 即将到期）
@@ -82,7 +82,7 @@
 - [x] 真实服务器 Docker Compose 构建部署验证（含宝塔反代 + HTTPS 全链路）
 - [x] 客户端 SDK 与可运行演示 §sdk/§
 - [x] 浏览器冒烟脚本（管理端 / 门户）
-- **验收标准**：§node scripts/acceptance.mjs§ 全绿；§test:all§ 132 项全绿
+- **验收标准**：§node scripts/acceptance.mjs§ 全绿；§test:all§ 135 项全绿
 
 ## M8 · 前端页面 ✅
 - [x] 登录页（含双因素步骤）、控制台外壳、路由守卫、401 自动刷新

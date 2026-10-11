@@ -5,7 +5,7 @@ help:
 	@echo "make install      安装依赖"
 	@echo "make dev          同时启动 api + web"
 	@echo "make dev-api      仅启动后端 (http://localhost:3000)"
-	@echo "make dev-web      仅启动前端 (http://localhost:5173)"
+	@echo "make dev-web      仅启动前端 (http://localhost:5273)"
 	@echo "make build        构建全部"
 	@echo "make typecheck    类型检查"
 	@echo "make test         运行测试"
