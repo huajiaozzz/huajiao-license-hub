@@ -305,6 +305,18 @@ describe('客户门户 / 订单 / 卡密（e2e）', () => {
     const statuses = (codesLeft.body.items as { status: string }[]).map((item) => item.status).sort();
     assert.deepEqual(statuses, ['used', 'void'], '保留 1 张已兑换 + 1 张已作废');
 
+    // 列表里的「卡密状态明细」必须与卡密实际状态一致（关联子查询易错点）
+    const listed = await request(server).get('/api/admin/redeem/batches?pageSize=200').set(admin());
+    const row = (listed.body.items as {
+      id: string; quantity: number; unusedCount: number; usedCodeCount: number; voidCount: number;
+    }[]).find((item) => item.id === mixedId);
+    assert.ok(row, '批次应能在列表里查到');
+    assert.deepEqual(
+      { quantity: row.quantity, unused: row.unusedCount, used: row.usedCodeCount, void: row.voidCount },
+      { quantity: 2, unused: 0, used: 1, void: 1 },
+      '状态明细：共 2 张 = 0 未使用 + 1 已使用 + 1 已作废',
+    );
+
     // 已作废的剩余卡密不能再兑换
     const tryVoid = await request(server).post('/api/portal/redeem').set(portal())
       .send({ code: mixed.body.codes[1] });

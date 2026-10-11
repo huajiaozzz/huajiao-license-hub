@@ -80,7 +80,7 @@
 | POST | `/orders/:id/refund` | 退款（可选同时吊销授权） |
 | POST | `/orders/:id/cancel` | 取消 |
 | GET/POST | `/coupons` · PATCH `/coupons/:id` | 优惠券 |
-| GET/POST | `/redeem-batches` | 卡密批次（创建即生成 N 条卡密） |
+| GET/POST | `/redeem-batches` | 卡密批次（创建即生成 N 条卡密）；列表每行附 `unusedCount` / `usedCodeCount` / `voidCount` 状态明细 |
 | DELETE | `/redeem-batches/:id` | 作废批次内未使用卡密；该批次**无兑换记录**时连同卡密一起删除（有兑换记录则保留，便于对账） |
 | GET | `/redeem-batches/:id/codes` | 批次内卡密（掩码） |
 | GET | `/redeem-batches/:id/export` | 导出卡密 CSV（含明文，记审计） |

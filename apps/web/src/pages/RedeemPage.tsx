@@ -29,6 +29,10 @@ interface BatchRow {
   planCode: string;
   quantity: number;
   usedCount: number;
+  /** 卡密状态明细（后端按 redeem_codes.status 实时统计） */
+  unusedCount: number;
+  usedCodeCount: number;
+  voidCount: number;
   channel: string | null;
   notes: string | null;
   expiresAt: string | null;
@@ -76,7 +80,8 @@ export function RedeemPage() {
   };
 
   const totalIssued = (batches.data?.items ?? []).reduce((sum, batch) => sum + batch.quantity, 0);
-  const totalUsed = (batches.data?.items ?? []).reduce((sum, batch) => sum + batch.usedCount, 0);
+  const totalUnused = (batches.data?.items ?? []).reduce((sum, batch) => sum + batch.unusedCount, 0);
+  const totalUsed = (batches.data?.items ?? []).reduce((sum, batch) => sum + batch.usedCodeCount, 0);
 
   const batchColumns: Column<BatchRow>[] = [
     {
@@ -92,13 +97,26 @@ export function RedeemPage() {
       ),
     },
     {
-      id: 'used', label: '已用 / 总数', align: 'right',
-      render: (row) => (
-        <span className="tabular-nums">
-          {row.usedCount}
-          <span className="opacity-45"> / {row.quantity}</span>
-        </span>
-      ),
+      id: 'status', label: '卡密状态',
+      render: (row) => {
+        // 只显示确实存在的状态：一排「已作废 0」只会碍眼
+        const chips = [
+          { status: 'unused', count: row.unusedCount },
+          { status: 'used', count: row.usedCodeCount },
+          { status: 'void', count: row.voidCount },
+        ].filter((chip) => chip.count > 0);
+        return (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] tabular-nums opacity-45">共 {row.quantity} 张</span>
+            {chips.map((chip) => (
+              <span key={chip.status} className="inline-flex items-center gap-1">
+                <StatusChip status={chip.status} />
+                <span className="text-[11px] tabular-nums opacity-60">{chip.count}</span>
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     { id: 'created', label: '创建时间', render: (row) => <span className="text-[11px] opacity-60">{formatDateTime(row.createdAt)}</span> },
     {
@@ -215,7 +233,7 @@ export function RedeemPage() {
         <StatCard label="批次数" value={batches.data?.total ?? '—'} icon={<Ticket size={16} />} />
         <StatCard label="本页卡密总数" value={totalIssued} />
         <StatCard label="本页已兑换" value={totalUsed} tone="success" />
-        <StatCard label="本页剩余" value={Math.max(0, totalIssued - totalUsed)} tone="warning" />
+        <StatCard label="本页未使用" value={totalUnused} tone="warning" />
       </div>
 
       <DataTable

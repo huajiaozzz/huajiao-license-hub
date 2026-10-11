@@ -89,6 +89,10 @@ export class RedeemService {
     if (query.productId) conditions.push(eq(redeemBatches.productId, query.productId));
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
+    // 卡密状态明细：关联子查询按 batch_id 挂到外层批次行上（::int 让两个驱动都返回 JS number）
+    const statusCount = (status: 'unused' | 'used' | 'void') =>
+      sql<number>`(select count(*) from ${redeemCodes} where ${redeemCodes.batchId} = ${redeemBatches.id} and ${redeemCodes.status} = ${status})::int`;
+
     const items = await this.db.select({
       id: redeemBatches.id,
       name: redeemBatches.name,
@@ -98,6 +102,9 @@ export class RedeemService {
       planCode: plans.code,
       quantity: redeemBatches.quantity,
       usedCount: redeemBatches.usedCount,
+      unusedCount: statusCount('unused'),
+      usedCodeCount: statusCount('used'),
+      voidCount: statusCount('void'),
       channel: redeemBatches.channel,
       notes: redeemBatches.notes,
       expiresAt: redeemBatches.expiresAt,
@@ -110,7 +117,17 @@ export class RedeemService {
       .limit(pageSize).offset(offset);
 
     const [totalRow] = await this.db.select({ value: count() }).from(redeemBatches).where(where);
-    return { items, total: Number(totalRow?.value ?? 0), page, pageSize };
+    return {
+      items: items.map((row) => ({
+        ...row,
+        unusedCount: Number(row.unusedCount ?? 0),
+        usedCodeCount: Number(row.usedCodeCount ?? 0),
+        voidCount: Number(row.voidCount ?? 0),
+      })),
+      total: Number(totalRow?.value ?? 0),
+      page,
+      pageSize,
+    };
   }
 
   async listCodes(query: ListRedeemCodesDto) {
